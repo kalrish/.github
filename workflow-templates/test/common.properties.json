@@ -3,5 +3,8 @@
 	"description": "GitHub workflow to test changes (as in pull requests) on all of my GitHub repositories",
 	"categories": [
 		"continuous-integration"
+	],
+	"filePatterns": [
+		".*\\.md$"
 	]
 }
