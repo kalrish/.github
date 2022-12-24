@@ -96,6 +96,39 @@ jobs:
           pipenv
           verify
 
+  Pylint:
+    name: Analyze Python code with Pylint
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Analyze Python code with Pylint
+        uses: ./.github/actions/Python-run
+        with:
+          # With --jobs=0, Pylint works in parallel with as many threads as processors in the system
+          command: >-
+            pylint
+            --jobs=0
+            --recursive=yes
+            --verbose
+            --
+            .
+          dependency_manager: ${{ inputs.dependency_manager }}
+
   pytest:
     name: Test Python code with pytest
     permissions:
