@@ -95,3 +95,31 @@ jobs:
         run: >-
           pipenv
           verify
+
+  pytest:
+    name: Test Python code with pytest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        OS:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    runs-on:
+      - ${{ matrix.OS }}
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Test Python code with pytest
+        uses: ./.github/actions/Python-run
+        with:
+          command: >-
+            pytest
+            --verbose
+          dependency_manager: ${{ inputs.dependency_manager }}
