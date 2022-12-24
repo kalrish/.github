@@ -23,6 +23,39 @@ env:
 
 jobs:
 
+  Bandit:
+    name: Analyze Python code with Bandit
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Analyze Python code with Bandit
+        uses: ./.github/actions/Python-run
+        with:
+          # FIXME: Load configuration from pyproject.toml
+          command: >-
+            bandit
+            --configfile=.bandit.yaml
+            --recursive
+            --verbose
+            --
+            .
+          dependency_manager: ${{ inputs.dependency_manager }}
+
   Flake8:
     name: Lint Python code with Flake8
     defaults:
