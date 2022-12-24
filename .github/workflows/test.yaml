@@ -8,6 +8,10 @@ name: Basic change testing
 env:
   npm_config_fund: 'false'
   npm_config_loglevel: verbose
+  PIP_VERBOSE: '1'
+  PIP_PROGRESS_BAR: 'off'
+  PIPENV_DONT_USE_PYENV: '1'
+  PIPENV_VERBOSE: '1'
 
 
 # Without quotes, this key could be parsed as the boolean true value instead of the string "on"
@@ -68,3 +72,48 @@ jobs:
           npx
           --
           markdownlint-cli2
+
+  # Most of my projects include some data formatted as YAML
+  yamllint:
+    name: Lint YAML with yamllint
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out pertinent branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from pyproject.toml when actions/setup-python supports it[1]
+          # 1: https://github.com/actions/setup-python/issues/542
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install Python dependencies
+        run: >-
+          pipenv
+          sync
+      -
+        name: Lint YAML with yamllint
+        run: >-
+          pipenv
+          run
+          --
+          yamllint
+          --strict
+          --
+          .
