@@ -19,3 +19,5 @@ jobs:
 
   test:
     uses: kalrish/.github/.github/workflows/test.yaml@v1
+    with:
+      Python_dependency_manager: ${{ vars.PYTHON_DEPENDENCY_MANAGER }}
