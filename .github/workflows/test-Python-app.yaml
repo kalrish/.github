@@ -109,6 +109,60 @@ jobs:
           pipenv
           verify
 
+  Pylint:
+    name: Analyze Python code with Pylint
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Analyze Python code with Pylint
+        # With --jobs=0, Pylint works in parallel with as many threads as processors in the system
+        run: >-
+          pipenv
+          run
+          --
+          pylint
+          --jobs=0
+          --recursive=yes
+          --verbose
+          --
+          .
+
   pytest:
     name: Test Python code with pytest
     permissions:
