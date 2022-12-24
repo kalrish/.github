@@ -1,0 +1,17 @@
+---
+
+# GitHub workflow to test changes (as in pull requests) on my GitHub repositories hosting Python code
+
+name: Python change testing
+
+
+# Without quotes, this key could be parsed as the boolean true value instead of the string "on"
+'on':
+  workflow_call:
+    inputs:
+      dependency_manager:
+        description: Tool to manage Python dependencies
+        type: string
+
+
+jobs:
