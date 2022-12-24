@@ -23,6 +23,35 @@ env:
 
 jobs:
 
+  Flake8:
+    name: Lint Python code with Flake8
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Lint Python code with Flake8
+        uses: ./.github/actions/Python-run
+        with:
+          # Project settings for Flake8 may be specified in each project's configuration file, .flake8
+          command: >-
+            flake8
+            --verbose
+          dependency_manager: ${{ inputs.dependency_manager }}
+
   Pipenv-verify:
     name: Check whether hash in Pipfile.lock is up to date
     defaults:
