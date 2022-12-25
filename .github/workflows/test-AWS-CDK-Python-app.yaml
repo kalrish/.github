@@ -1,0 +1,13 @@
+---
+
+# GitHub workflow to test changes (as in pull requests) on my GitHub repositories hosting AWS CDK apps written in Python
+
+name: AWS CDK Python app change testing
+
+
+# Without quotes, this key could be parsed as the boolean true value instead of the string "on"
+'on':
+  workflow_call:
+
+
+jobs:
