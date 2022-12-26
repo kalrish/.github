@@ -16,6 +16,16 @@ env:
 
 # Without quotes, this key could be parsed as the boolean true value instead of the string "on"
 'on':
+  # Since this GitHub workflow applies to all of my repositories at GitHub,
+  # it applies to this repository as well
+  pull_request:
+    types:
+      # A pull request was created
+      - opened
+      # A previously closed pull request was reopened
+      - reopened
+      # A pull request's head branch was updated
+      - synchronize
   workflow_call:
 
 
