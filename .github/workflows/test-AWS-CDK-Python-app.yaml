@@ -90,6 +90,7 @@ jobs:
         # The `cdk` command must run under both `pipenv run` and `npx` because:
         #  - the dependencies of the CDK code are installed in a virtualenv managed by Pipenv; and
         #  - the command `cdk` itself is installed locally by npm.
+        # --lookups=false because context should be in version control
         run: >-
           pipenv
           run
@@ -98,6 +99,7 @@ jobs:
           --
           cdk
           --ci
+          --lookups=false
           --notices
           --output=cdk.out
           --strict
