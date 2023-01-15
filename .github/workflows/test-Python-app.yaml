@@ -1,0 +1,316 @@
+---
+
+# GitHub workflow to test changes (as in pull requests) on my GitHub repositories hosting Python apps
+
+name: Python app change testing
+
+
+env:
+  PIP_VERBOSE: '1'
+  PIP_PROGRESS_BAR: 'off'
+  PIPENV_DONT_USE_PYENV: '1'
+  PIPENV_VERBOSE: '1'
+
+
+# Without quotes, this key could be parsed as the boolean true value instead of the string "on"
+'on':
+  workflow_call:
+
+
+jobs:
+
+  Bandit:
+    name: Analyze Python code with Bandit
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Analyze Python code with Bandit
+        run: >-
+          pipenv
+          run
+          --
+          bandit
+          --configfile=.bandit.yaml
+          --recursive
+          --verbose
+          --
+          .
+
+  Flake8:
+    name: Lint Python code with Flake8
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Lint Python code with Flake8
+        # Project settings for Flake8 may be specified in each project's configuration file, .flake8
+        run: >-
+          pipenv
+          run
+          --
+          flake8
+          --verbose
+
+  Pipenv-verify:
+    name: Check whether hash in Pipfile.lock is up to date
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Check whether hash in Pipfile.lock is up to date
+        run: >-
+          pipenv
+          verify
+
+  pycodestyle:
+    name: Check Python code with pycodestyle
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Check Python code with pycodestyle
+        # Project settings for pycodestyle may be specified in the project's `tox.ini`
+        run: >-
+          pipenv
+          run
+          --
+          pycodestyle
+          --verbose
+
+  Pylint:
+    name: Analyze Python code with Pylint
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Analyze Python code with Pylint
+        # With --jobs=0, Pylint works in parallel with as many threads as processors in the system
+        run: >-
+          pipenv
+          run
+          --
+          pylint
+          --jobs=0
+          --recursive=yes
+          --verbose
+          --
+          .
+
+  pytest:
+    name: Test Python code with pytest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        OS:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    runs-on:
+      - ${{ matrix.OS }}
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Test Python code with pytest
+        run: >-
+          pipenv
+          run
+          --
+          pytest
+          --verbose
