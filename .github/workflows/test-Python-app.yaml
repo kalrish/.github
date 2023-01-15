@@ -162,6 +162,56 @@ jobs:
           pipenv
           verify
 
+  pycodestyle:
+    name: Check Python code with pycodestyle
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Install development dependencies
+        run: >-
+          pipenv
+          sync
+          --dev
+      -
+        name: Check Python code with pycodestyle
+        # Project settings for pycodestyle may be specified in the project's `tox.ini`
+        run: >-
+          pipenv
+          run
+          --
+          pycodestyle
+          --verbose
+
   Pylint:
     name: Analyze Python code with Pylint
     defaults:
