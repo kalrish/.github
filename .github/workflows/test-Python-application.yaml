@@ -129,6 +129,35 @@ jobs:
           pipenv
           verify
 
+  pycodestyle:
+    name: Check Python code with pycodestyle
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Check Python code with pycodestyle
+        uses: ./.github/actions/Python-run
+        with:
+          # Project settings for pycodestyle may be specified in the project's `tox.ini`
+          command: >-
+            pycodestyle
+            --verbose
+          dependency_manager: ${{ inputs.dependency_manager }}
+
   Pylint:
     name: Analyze Python code with Pylint
     defaults:
