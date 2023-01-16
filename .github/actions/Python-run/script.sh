@@ -3,6 +3,30 @@ set \
 	#
 
 
+function install_dependencies_with_Pipenv
+{
+	pip \
+		install \
+		-- \
+		pipenv \
+		#
+
+	pipenv \
+		sync \
+		#
+}
+
+
+function run_under_Pipenv
+{
+	pipenv \
+		run \
+		-- \
+		${command} \
+		#
+}
+
+
 echo "::debug::Installing Python dependencies…"
 "install_dependencies_with_${dependency_manager}"
 echo "::debug::Python dependencies installed"
