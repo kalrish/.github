@@ -47,6 +47,40 @@ runs:
         run
         --
         ${{ inputs.command }}
+    -
+      name: Set up Python
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      uses: actions/setup-python@v4
+      with:
+        cache: poetry
+        # FIXME: Get Python version from pyproject.toml when actions/setup-python supports it[1]
+        # 1: https://github.com/actions/setup-python/issues/542
+        python-version-file: .python-version
+    -
+      name: Install Poetry
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      shell: sh
+      run: >-
+        pip
+        install
+        --
+        poetry
+    -
+      name: Install Python dependencies
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      shell: sh
+      run: >-
+        poetry
+        install
+    -
+      name: Run command in Python virtualenv with dependencies managed by Pipenv
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      shell: sh
+      run: >-
+        poetry
+        run
+        --
+        ${{ inputs.command }}
     # -
     #   name: Run command with Python dependencies
     #   env:

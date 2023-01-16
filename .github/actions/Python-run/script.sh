@@ -17,10 +17,31 @@ function install_dependencies_with_Pipenv
 		#
 }
 
+function install_dependencies_with_Poetry
+{
+	pip \
+		install \
+		-- \
+		poetry \
+		#
+	poetry \
+		install \
+		#
+}
+
 
 function run_under_Pipenv
 {
 	pipenv \
+		run \
+		-- \
+		${command} \
+		#
+}
+
+function run_under_Poetry
+{
+	poetry \
 		run \
 		-- \
 		${command} \
