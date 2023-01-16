@@ -1,0 +1,22 @@
+---
+
+name: Run a command with Python dependencies
+description: Set up Python, install dependencies and run a command
+inputs:
+  command:
+    description: Command to run
+    required: true
+  dependency_manager:
+    description: Tool to manage Python dependencies
+    required: true
+runs:
+  using: composite
+  steps:
+    # -
+    #   name: Run command with Python dependencies
+    #   env:
+    #     command: ${{ inputs.command }}
+    #     dependency_manager: ${{ inputs.dependency_manager }}
+    #   run: >-
+    #     "${GITHUB_ACTION_PATH}/script.sh"
+    #   shell: bash
