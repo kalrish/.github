@@ -37,6 +37,7 @@ runs:
       run: >-
         pipenv
         sync
+        --dev
     -
       name: Run command in Python virtualenv with dependencies managed by Pipenv
       if: ${{ inputs.dependency_manager == 'Pipenv' }}

@@ -13,6 +13,7 @@ function install_dependencies_with_Pipenv
 
 	pipenv \
 		sync \
+		--dev \
 		#
 }
 
