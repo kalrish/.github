@@ -1,0 +1,220 @@
+---
+
+# GitHub workflow to test changes (as in pull requests) on my GitHub repositories hosting Python code
+
+name: Python change testing
+
+
+env:
+  PIP_VERBOSE: '1'
+  PIP_PROGRESS_BAR: 'off'
+  PIPENV_DONT_USE_PYENV: '1'
+  PIPENV_VERBOSE: '1'
+
+
+# Without quotes, this key could be parsed as the boolean true value instead of the string "on"
+'on':
+  workflow_call:
+    inputs:
+      dependency_manager:
+        description: Tool to manage Python dependencies
+        type: string
+
+
+jobs:
+
+  Bandit:
+    name: Analyze Python code with Bandit
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Analyze Python code with Bandit
+        uses: ./.github/actions/Python-run
+        with:
+          # FIXME: Load configuration from pyproject.toml
+          command: >-
+            bandit
+            --configfile=.bandit.yaml
+            --recursive
+            --verbose
+            --
+            .
+          dependency_manager: ${{ inputs.dependency_manager }}
+
+  Flake8:
+    name: Lint Python code with Flake8
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Lint Python code with Flake8
+        uses: ./.github/actions/Python-run
+        with:
+          # Project settings for Flake8 may be specified in each project's configuration file, .flake8
+          command: >-
+            flake8
+            --verbose
+          dependency_manager: ${{ inputs.dependency_manager }}
+
+  Pipenv-verify:
+    name: Check whether hash in Pipfile.lock is up to date
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    if: >-
+      ${{
+        inputs.dependency_manager == 'Pipenv'
+      }}
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pipenv
+          # FIXME: Get Python version from Pipfile once supported[1]
+          # 1: https://github.com/actions/setup-python/issues/574
+          python-version-file: .python-version
+      -
+        name: Install Pipenv
+        run: >-
+          pip
+          install
+          --
+          pipenv
+      -
+        name: Check whether hash in Pipfile.lock is up to date
+        run: >-
+          pipenv
+          verify
+
+  pycodestyle:
+    name: Check Python code with pycodestyle
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out branch proposed for merging
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Check Python code with pycodestyle
+        uses: ./.github/actions/Python-run
+        with:
+          # Project settings for pycodestyle may be specified in the project's `tox.ini`
+          command: >-
+            pycodestyle
+            --verbose
+          dependency_manager: ${{ inputs.dependency_manager }}
+
+  Pylint:
+    name: Analyze Python code with Pylint
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Analyze Python code with Pylint
+        uses: ./.github/actions/Python-run
+        with:
+          # With --jobs=0, Pylint works in parallel with as many threads as processors in the system
+          command: >-
+            pylint
+            --jobs=0
+            --recursive=yes
+            --verbose
+            --
+            .
+          dependency_manager: ${{ inputs.dependency_manager }}
+
+  pytest:
+    name: Test Python code with pytest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        OS:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    runs-on:
+      - ${{ matrix.OS }}
+    steps:
+      -
+        name: Check out corresponding git branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Test Python code with pytest
+        uses: ./.github/actions/Python-run
+        with:
+          command: >-
+            pytest
+            --verbose
+          dependency_manager: ${{ inputs.dependency_manager }}
