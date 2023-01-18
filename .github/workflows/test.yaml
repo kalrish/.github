@@ -1,0 +1,104 @@
+---
+
+# GitHub workflow to test changes (as in pull requests) on all of my GitHub repositories
+
+name: Basic change testing
+
+
+env:
+  npm_config_fund: 'false'
+  npm_config_loglevel: verbose
+  PIP_VERBOSE: '1'
+  PIP_PROGRESS_BAR: 'off'
+  PIPENV_DONT_USE_PYENV: '1'
+  PIPENV_VERBOSE: '1'
+
+
+# Without quotes, this key could be parsed as the boolean true value instead of the string "on"
+'on':
+  workflow_call:
+    inputs:
+      Python_dependency_manager:
+        description: Tool to manage Python dependencies
+        type: string
+
+
+jobs:
+
+  # All of my projects have or should have some Markdown content;
+  # at the very least a `README.md`
+  markdownlint-cli2:
+    name: Lint Markdown content with markdownlint-cli2
+    defaults:
+      run:
+        # The shell steps on this job don't need Bash,
+        # to which GitHub Actions defaults on Linux runners;
+        # POSIX shell functionality suffices.
+        shell: sh
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out pertinent branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          cache: npm
+          # Besides .nvmrc, actions/setup-node@v3 can read the Node.js version to install from other sources:
+          #  - the key `engines.node` in package.json;
+          #  - the key `volta.node` in package.json;
+          #  - the file .node-version; and
+          #  - the file .tool-versions.
+          # The key `engines` in package.json[1] is meant for distributable packages;
+          # this was the conceptual reason of the Volta team for resorting to their own key[2].
+          # .node-version is supported by multiple tools, but not by NVM[3], which seems the most popular, and it doesn't support semver specifications.
+          # .tool-versions is supported by asdf, which seems interesting but David was too lazy to dive into.
+          # 1: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#engines
+          # 2: https://github.com/volta-cli/volta/issues/742#issuecomment-631588143
+          # 3: https://github.com/nvm-sh/nvm/issues/794
+          node-version-file: .nvmrc
+      -
+        name: Install Node.js dependencies
+        run: >-
+          npm
+          ci
+      -
+        name: Lint Markdown content with markdownlint-cli2
+        # All settings are in .markdownlint-cli2.yaml files
+        run: >-
+          npx
+          --
+          markdownlint-cli2
+
+  # Most of my projects include some data formatted as YAML;
+  # at the very least the configuration file for markdownlint-cli2 and GitHub workflow configuration files
+  yamllint:
+    name: Lint YAML with yamllint
+    permissions:
+      contents: read
+    runs-on:
+      - ubuntu-latest
+    steps:
+      -
+        name: Check out pertinent branch
+        uses: actions/checkout@v3
+        with:
+          # This job does not require git history
+          fetch-depth: 1
+      -
+        name: Lint YAML with yamllint
+        uses: ./.github/actions/Python-run
+        with:
+          command: >-
+            yamllint
+            --strict
+            --
+            .
+          dependency_manager: ${{ inputs.Python_dependency_manager }}

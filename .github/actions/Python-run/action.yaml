@@ -1,0 +1,91 @@
+---
+
+name: Run a command with Python dependencies
+description: Set up Python, install dependencies and run a command
+inputs:
+  command:
+    description: Command to run
+    required: true
+  dependency_manager:
+    description: Tool to manage Python dependencies
+    required: true
+runs:
+  using: composite
+  steps:
+    -
+      name: Set up Python
+      if: ${{ inputs.dependency_manager == 'Pipenv' }}
+      uses: actions/setup-python@v4
+      with:
+        cache: pipenv
+        # FIXME: Get Python version from pyproject.toml when actions/setup-python supports it[1]
+        # 1: https://github.com/actions/setup-python/issues/542
+        python-version-file: .python-version
+    -
+      name: Install Pipenv
+      if: ${{ inputs.dependency_manager == 'Pipenv' }}
+      shell: sh
+      run: >-
+        pip
+        install
+        --
+        pipenv
+    -
+      name: Install Python dependencies
+      if: ${{ inputs.dependency_manager == 'Pipenv' }}
+      shell: sh
+      run: >-
+        pipenv
+        sync
+        --dev
+    -
+      name: Run command in Python virtualenv with dependencies managed by Pipenv
+      if: ${{ inputs.dependency_manager == 'Pipenv' }}
+      shell: sh
+      run: >-
+        pipenv
+        run
+        --
+        ${{ inputs.command }}
+    -
+      name: Set up Python
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      uses: actions/setup-python@v4
+      with:
+        cache: poetry
+        # FIXME: Get Python version from pyproject.toml when actions/setup-python supports it[1]
+        # 1: https://github.com/actions/setup-python/issues/542
+        python-version-file: .python-version
+    -
+      name: Install Poetry
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      shell: sh
+      run: >-
+        pip
+        install
+        --
+        poetry
+    -
+      name: Install Python dependencies
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      shell: sh
+      run: >-
+        poetry
+        install
+    -
+      name: Run command in Python virtualenv with dependencies managed by Pipenv
+      if: ${{ inputs.dependency_manager == 'Poetry' }}
+      shell: sh
+      run: >-
+        poetry
+        run
+        --
+        ${{ inputs.command }}
+    # -
+    #   name: Run command with Python dependencies
+    #   env:
+    #     command: ${{ inputs.command }}
+    #     dependency_manager: ${{ inputs.dependency_manager }}
+    #   run: >-
+    #     "${GITHUB_ACTION_PATH}/script.sh"
+    #   shell: bash
